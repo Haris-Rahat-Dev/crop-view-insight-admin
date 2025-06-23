@@ -14,8 +14,9 @@ interface AuthContextType {
   currentUser: User | null;
   userRole: string | null;
   isAdmin: boolean;
+  isExpert: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, requiredRole: 'admin' | 'expert') => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -27,6 +28,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [isExpert, setIsExpert] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { toast } = useToast();
 
@@ -45,15 +47,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const role = userData.role || "farmer";
             setUserRole(role);
             setIsAdmin(role === "admin");
+            setIsExpert(role === "expert");
           } else {
             // Default to farmer role if no role is found
             setUserRole("farmer");
             setIsAdmin(false);
+            setIsExpert(false);
           }
         } catch (error) {
           console.error("Error fetching user role:", error);
           setUserRole("farmer");
           setIsAdmin(false);
+          setIsExpert(false);
           toast({
             title: "Error",
             description: "Failed to fetch user role.",
@@ -63,6 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         setUserRole(null);
         setIsAdmin(false);
+        setIsExpert(false);
       }
       
       setIsLoading(false);
@@ -71,21 +77,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => unsubscribe();
   }, [toast]);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, requiredRole: 'admin' | 'expert') => {
     try {
       setIsLoading(true);
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       
-      // Check if user is admin
+      // Check if user has the required role
       const userDocRef = doc(db, "users", userCredential.user.uid);
       const userDoc = await getDoc(userDocRef);
       
       if (userDoc.exists()) {
         const userData = userDoc.data();
-        if (userData.role !== "admin") {
-          // Sign out if not admin
+        if (userData.role !== requiredRole) {
+          // Sign out if role doesn't match
           await firebaseSignOut(auth);
-          throw new Error("Access denied. Only administrators can access this dashboard.");
+          throw new Error(`Access denied. Only ${requiredRole}s can access this dashboard.`);
         }
       } else {
         // Sign out if user document does not exist
@@ -125,6 +131,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     currentUser,
     userRole,
     isAdmin,
+    isExpert,
     isLoading,
     login,
     signOut

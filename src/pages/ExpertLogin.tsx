@@ -8,12 +8,12 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 
-const Login = () => {
+const ExpertLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const { currentUser, isAdmin, login, isLoading } = useAuth();
+  const { currentUser, isExpert, login, isLoading } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,7 +21,7 @@ const Login = () => {
     setIsSubmitting(true);
     
     try {
-      await login(email, password, 'admin');
+      await login(email, password, 'expert');
     } catch (error: any) {
       setError(error.message || 'Failed to log in');
     } finally {
@@ -29,7 +29,7 @@ const Login = () => {
     }
   };
 
-  // If user is already logged in and is an admin, redirect to dashboard
+  // If user is already logged in and is an expert, redirect to expert dashboard
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -38,8 +38,8 @@ const Login = () => {
     );
   }
   
-  if (currentUser && isAdmin) {
-    return <Navigate to="/dashboard" replace />;
+  if (currentUser && isExpert) {
+    return <Navigate to="/expert" replace />;
   }
 
   return (
@@ -48,13 +48,13 @@ const Login = () => {
         <Card>
           <CardHeader className="space-y-1">
             <div className="flex items-center justify-center mb-4">
-              <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white font-bold text-xl">
+              <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xl">
                 CV
               </div>
             </div>
-            <CardTitle className="text-2xl text-center">Admin Dashboard</CardTitle>
+            <CardTitle className="text-2xl text-center">Expert Dashboard</CardTitle>
             <CardDescription className="text-center">
-              Enter your credentials to access the analytics dashboard
+              Enter your credentials to access the expert dashboard
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -65,7 +65,7 @@ const Login = () => {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="admin@example.com"
+                    placeholder="expert@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -90,7 +90,7 @@ const Login = () => {
 
                 <Button
                   type="submit"
-                  className="w-full"
+                  className="w-full bg-blue-600 hover:bg-blue-700"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
@@ -107,13 +107,13 @@ const Login = () => {
           </CardContent>
           <CardFooter className="flex flex-col space-y-2">
             <p className="text-xs text-center w-full text-muted-foreground">
-              Only administrators can access this dashboard.
+              Only experts can access this dashboard.
             </p>
             <Link 
-              to="/expert-login"
+              to="/login"
               className="text-sm text-primary hover:underline"
             >
-              Are you an expert? Login here
+              Are you an admin? Login here
             </Link>
           </CardFooter>
         </Card>
@@ -122,4 +122,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default ExpertLogin;
